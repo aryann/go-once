@@ -1,6 +1,9 @@
 package once
 
-import "sync"
+import (
+	"sync"
+	"sync/atomic"
+)
 
 type MutexBasedOnce struct {
 	mutex sync.Mutex
@@ -15,4 +18,24 @@ func (m *MutexBasedOnce) Do(f func()) {
 		f()
 		m.done = true
 	}
+}
+
+type MutexBasedOnceWithInt32Atomic struct {
+	mutex sync.Mutex
+	done  int32
+}
+
+func (m *MutexBasedOnceWithInt32Atomic) Do(f func()) {
+	if atomic.LoadInt32(&m.done) == 1 {
+		return
+	}
+
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	if atomic.LoadInt32(&m.done) == 1 {
+		return
+	}
+	f()
+	atomic.StoreInt32(&m.done, 1)
 }

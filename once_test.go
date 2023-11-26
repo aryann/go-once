@@ -52,6 +52,11 @@ func TestMutexBasedOnce(t *testing.T) {
 	run(t, &once, 100)
 }
 
+func TestMutexBasedOnceWithInt32Atomic(t *testing.T) {
+	var once once.MutexBasedOnceWithInt32Atomic
+	run(t, &once, 100)
+}
+
 var routineCounts = []int{1, 1e3, 1e5, 1e7}
 
 type newOnce func() Once
@@ -76,5 +81,11 @@ func BenchmarkSyncOnce(b *testing.B) {
 func BenchmarkMutexBasedOnce(b *testing.B) {
 	benchmarkOnce(b, func() Once {
 		return &once.MutexBasedOnce{}
+	})
+}
+
+func BenchmarkMutexBasedOnceWithInt32Atomic(b *testing.B) {
+	benchmarkOnce(b, func() Once {
+		return &once.MutexBasedOnceWithInt32Atomic{}
 	})
 }
