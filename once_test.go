@@ -9,6 +9,26 @@ import (
 	"aryan.app/go-once"
 )
 
+type newOnce func() Once
+
+var implementations = []struct {
+	name string
+	new  newOnce
+}{
+	{
+		name: "standard-lib-once",
+		new:  func() Once { return &sync.Once{} },
+	},
+	{
+		name: "mutex-only-once",
+		new:  func() Once { return &once.MutexBasedOnce{} },
+	},
+	{
+		name: "mutex-and-int32-atomic-once",
+		new:  func() Once { return &once.MutexBasedOnceWithInt32Atomic{} },
+	},
+}
+
 type Once interface {
 	Do(f func())
 }
@@ -42,50 +62,25 @@ func run(test TestHelper, once Once, routineCount int) {
 	}
 }
 
-func TestSyncOnce(t *testing.T) {
-	var once sync.Once
-	run(t, &once, 100)
-}
+func Test(t *testing.T) {
+	for _, implementation := range implementations {
+		t.Run(implementation.name, func(t *testing.T) {
+			run(t, implementation.new(), 100)
 
-func TestMutexBasedOnce(t *testing.T) {
-	var once once.MutexBasedOnce
-	run(t, &once, 100)
-}
-
-func TestMutexBasedOnceWithInt32Atomic(t *testing.T) {
-	var once once.MutexBasedOnceWithInt32Atomic
-	run(t, &once, 100)
-}
-
-var routineCounts = []int{1, 1e3, 1e5, 1e7}
-
-type newOnce func() Once
-
-func benchmarkOnce(b *testing.B, new newOnce) {
-	b.Helper()
-	for _, count := range routineCounts {
-		b.Run(fmt.Sprintf("routine_count_%d", count), func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				run(b, new(), count)
-			}
 		})
 	}
 }
 
-func BenchmarkSyncOnce(b *testing.B) {
-	benchmarkOnce(b, func() Once {
-		return &sync.Once{}
-	})
-}
+var routineCounts = []int{1, 1e3, 1e5, 1e7}
 
-func BenchmarkMutexBasedOnce(b *testing.B) {
-	benchmarkOnce(b, func() Once {
-		return &once.MutexBasedOnce{}
-	})
-}
-
-func BenchmarkMutexBasedOnceWithInt32Atomic(b *testing.B) {
-	benchmarkOnce(b, func() Once {
-		return &once.MutexBasedOnceWithInt32Atomic{}
-	})
+func Benchmark(b *testing.B) {
+	for _, implementation := range implementations {
+		for _, count := range routineCounts {
+			b.Run(fmt.Sprintf("%s/routines=%d", implementation.name, count), func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					run(b, implementation.new(), count)
+				}
+			})
+		}
+	}
 }
