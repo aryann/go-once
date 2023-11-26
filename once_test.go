@@ -21,11 +21,11 @@ var implementations = []struct {
 	},
 	{
 		name: "mutex-only-once",
-		new:  func() Once { return &once.MutexBasedOnce{} },
+		new:  func() Once { return &once.MutexOnlyOnce{} },
 	},
 	{
 		name: "mutex-and-int32-atomic-once",
-		new:  func() Once { return &once.MutexBasedOnceWithInt32Atomic{} },
+		new:  func() Once { return &once.MutexAndInt32AtomicOnce{} },
 	},
 }
 

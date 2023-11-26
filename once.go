@@ -5,12 +5,12 @@ import (
 	"sync/atomic"
 )
 
-type MutexBasedOnce struct {
+type MutexOnlyOnce struct {
 	mutex sync.Mutex
 	done  bool
 }
 
-func (m *MutexBasedOnce) Do(f func()) {
+func (m *MutexOnlyOnce) Do(f func()) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -20,12 +20,12 @@ func (m *MutexBasedOnce) Do(f func()) {
 	}
 }
 
-type MutexBasedOnceWithInt32Atomic struct {
+type MutexAndInt32AtomicOnce struct {
 	mutex sync.Mutex
 	done  int32
 }
 
-func (m *MutexBasedOnceWithInt32Atomic) Do(f func()) {
+func (m *MutexAndInt32AtomicOnce) Do(f func()) {
 	if atomic.LoadInt32(&m.done) == 1 {
 		return
 	}
