@@ -47,17 +47,24 @@ func run(test TestHelper, once Once, routineCount int) {
 
 	var count int64
 
+	start := make(chan struct{})
 	var wg sync.WaitGroup
 	for i := 0; i < routineCount; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+
+			// Ensures that as many Go routines as possible run at the same
+			// time.
+			<-start
+
 			once.Do(func() {
 				atomic.AddInt64(&count, 1)
 			})
 		}()
 	}
 
+	close(start)
 	wg.Wait()
 
 	finalCount := atomic.LoadInt64(&count)
@@ -70,12 +77,11 @@ func Test(t *testing.T) {
 	for _, implementation := range implementations {
 		t.Run(implementation.name, func(t *testing.T) {
 			run(t, implementation.new(), 100)
-
 		})
 	}
 }
 
-var routineCounts = []int{1, 1e3, 1e5, 1e7}
+var routineCounts = []int{1, 1e3, 1e5}
 
 func Benchmark(b *testing.B) {
 	for _, implementation := range implementations {
