@@ -3,6 +3,8 @@ package once_test
 import (
 	"sync"
 	"testing"
+
+	"aryan.app/go-once"
 )
 
 type Once interface {
@@ -53,5 +55,10 @@ func testOnce(t *testing.T, once Once) {
 
 func TestSyncOnce(t *testing.T) {
 	var once sync.Once
+	testOnce(t, &once)
+}
+
+func TestMutexBasedOnce(t *testing.T) {
+	var once once.MutexBasedOnce
 	testOnce(t, &once)
 }
