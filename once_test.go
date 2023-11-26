@@ -27,6 +27,10 @@ var implementations = []struct {
 		name: "mutex-and-int32-atomic-once",
 		new:  func() Once { return &once.MutexAndInt32AtomicOnce{} },
 	},
+	{
+		name: "mutex-and-int64-atomic-once",
+		new:  func() Once { return &once.MutexAndInt64AtomicOnce{} },
+	},
 }
 
 type Once interface {
@@ -76,7 +80,7 @@ var routineCounts = []int{1, 1e3, 1e5, 1e7}
 func Benchmark(b *testing.B) {
 	for _, implementation := range implementations {
 		for _, count := range routineCounts {
-			b.Run(fmt.Sprintf("%s/routines=%d", implementation.name, count), func(b *testing.B) {
+			b.Run(fmt.Sprintf("%s/routines=%d/", implementation.name, count), func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
 					run(b, implementation.new(), count)
 				}

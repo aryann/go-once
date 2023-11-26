@@ -39,3 +39,23 @@ func (m *MutexAndInt32AtomicOnce) Do(f func()) {
 	f()
 	atomic.StoreInt32(&m.done, 1)
 }
+
+type MutexAndInt64AtomicOnce struct {
+	mutex sync.Mutex
+	done  int64
+}
+
+func (m *MutexAndInt64AtomicOnce) Do(f func()) {
+	if atomic.LoadInt64(&m.done) == 1 {
+		return
+	}
+
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	if atomic.LoadInt64(&m.done) == 1 {
+		return
+	}
+	f()
+	atomic.StoreInt64(&m.done, 1)
+}
